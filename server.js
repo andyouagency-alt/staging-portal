@@ -140,7 +140,13 @@ const COMMON_LOCK =
   "The room layout, all wall positions, ceiling lines, beams and pillars stay exactly the same. " +
   "Do not invent, move, resize, add or remove ANY structural element. Do not change the room's proportions. " +
   "Keep any person and any animal exactly as they are — same position, pose, face, clothing and scale. " +
-  "Lighting direction and daylight must match the original photo. ";
+  "Lighting direction and daylight must match the original photo. " +
+  "FURNITURE PLACEMENT RULES (professional home staging for luxury real estate — must be physically realistic, exactly as a real interior designer would stage it): " +
+  "NEVER place any furniture, shelf, TV unit or decor in front of or inside a door, doorway, open passage or walkway — all doors, openings and circulation paths must remain completely free and usable. " +
+  "NEVER block a window: windows must remain fully visible and accessible; no tall furniture in front of glass. " +
+  "TV units, shelves and cabinets ONLY against solid closed walls. " +
+  "All furniture parallel or deliberately angled to the room axes, correctly scaled to the room, standing plausibly on the floor with correct perspective and correct shadows. " +
+  "Less is more: a realistic, uncluttered arrangement that a buyer could recreate exactly. ";
 
 // Modus 1: Nur Möblierung – Oberflächen bleiben komplett unangetastet
 const LOCK_MOEBLIEREN = COMMON_LOCK +
