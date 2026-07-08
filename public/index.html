@@ -266,7 +266,7 @@
     statusEl.innerHTML = '<span class="work"><span class="spinner"></span>Visualisierung wird erstellt (ca. 30–90 Sek.) …</span>';
     try {
       const r = await fetch("/api/stage", { method:"POST", headers: hdrs(), body: JSON.stringify({
-        imageDataUri, prompt: p, format: $("format").value, variants: parseInt($("variants").value,10)
+        imageDataUri: imgDataUri, prompt: p, format: $("format").value, variants: parseInt($("variants").value,10)
       })});
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Fehler");
