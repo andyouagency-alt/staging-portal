@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>andyouagency Real Estate Staging Portal</title>
+<style>
+  :root{--bg:#000000;--panel:#0d0d0d;--panel2:#161616;--border:#2a2a2a;--text:#ffffff;--muted:#9a9a9a;--accent:#ff6a00;--accent2:#ff8a33;--ok:#5fd48a;--err:#e06a6a}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+  .wrap{max-width:960px;margin:0 auto;padding:26px 18px 90px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:10px}
+  h1{font-size:22px}h1 span{color:var(--accent)}
+  .credits{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 16px;font-size:14px}
+  .credits b{color:var(--accent2)}
+  .credits button{margin-left:12px;background:var(--accent);border:none;border-radius:7px;padding:6px 12px;font-weight:700;cursor:pointer;color:#000}
+  .steps{display:flex;gap:6px;margin-bottom:22px;flex-wrap:wrap}
+  .step{flex:1;min-width:120px;text-align:center;font-size:12px;padding:9px 4px;border-radius:8px;background:var(--panel);border:1px solid var(--border);color:var(--muted)}
+  .step.active{border-color:var(--accent);color:var(--accent2);font-weight:600}
+  .step.done{color:var(--ok)}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px}
+  .card h2{font-size:16px;margin-bottom:16px;color:var(--accent2)}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
+  input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14px;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+  textarea{resize:vertical;min-height:70px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}.row>div{flex:1;min-width:170px}
+  .drop{border:2px dashed var(--border);border-radius:12px;padding:36px 18px;text-align:center;color:var(--muted);cursor:pointer;font-size:14px}
+  .drop.drag{border-color:var(--accent);color:var(--accent)}
+  .drop img{max-height:240px;max-width:100%;border-radius:8px;display:block;margin:0 auto 10px}
+  .btn{background:var(--accent);color:#000;border:none;border-radius:10px;padding:13px 26px;font-size:15px;font-weight:700;cursor:pointer;margin-top:16px}
+  .btn:hover{background:var(--accent2)}.btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.sec{background:var(--panel2);color:var(--text);border:1px solid var(--border);font-weight:500}
+  .tpl{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  .tpl button{background:var(--panel2);border:1px solid var(--border);border-radius:20px;color:var(--text);padding:7px 14px;font-size:13px;cursor:pointer}
+  .tpl button.sel{border-color:var(--accent);color:var(--accent2)}
+  .variants{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:660px){.variants{grid-template-columns:1fr}}
+  .var{border:2px solid var(--border);border-radius:12px;padding:8px;cursor:pointer;text-align:center;background:var(--panel2)}
+  .var.sel{border-color:var(--accent)}
+  .var img{width:100%;border-radius:8px;display:block}
+  .var p{font-size:12px;color:var(--muted);padding:8px 0 2px}
+  .status{font-size:13px;margin-top:14px;line-height:1.7;white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;color:var(--muted)}
+  .status .ok{color:var(--ok)}.status .err{color:var(--err)}.status .work{color:var(--accent2)}
+  .hint{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+  .hidden{display:none}
+  .spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .login{max-width:400px;margin:12vh auto}
+  .final img{max-width:100%;border-radius:10px;display:block;margin:0 auto}
+  .exportrow{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="wrap login" id="loginView">
+  <div class="card">
+    <h2>andyouagency <span style="color:var(--accent)">Real Estate</span> Staging Portal</h2>
+    <label>Zugangscode</label>
+    <input type="password" id="code" placeholder="Code eingeben">
+    <button class="btn" id="loginBtn" style="width:100%">Anmelden</button>
+    <div class="status" id="loginStatus"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="wrap hidden" id="appView">
+  <header>
+    <h1>andyouagency <span>Real Estate</span> Staging Portal</h1>
+    <div class="credits">Guthaben: <b id="creditVal">–</b> Visualisierungen
+      <button id="buyBtn">+ Aufladen</button>
+    </div>
+  </header>
+
+  <div class="steps">
+    <div class="step" id="s1">1 · Foto</div>
+    <div class="step" id="s2">2 · Stil &amp; Format</div>
+    <div class="step" id="s3">3 · Variante wählen</div>
+    <div class="step" id="s4">4 · Export</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="card" id="step1">
+    <h2>Schritt 1 · Foto hochladen</h2>
+    <div class="drop" id="drop"><span id="dropText">Foto hierher ziehen oder klicken</span></div>
+    <input type="file" id="file" accept="image/*" style="display:none">
+    <button class="btn" id="to2" disabled>Weiter →</button>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card hidden" id="step2">
+    <h2>Schritt 2 · Beschreibung &amp; Format</h2>
+    <label>Art der Visualisierung</label>
+    <select id="mode">
+      <option value="moebeln">Möblierung – Raum, Boden &amp; Wände bleiben exakt wie im Foto</option>
+      <option value="rohbau">Rohbau → fertig saniert – Boden/Wände werden gemacht, Fenster &amp; Grundriss bleiben 1:1</option>
+    </select>
+    <label>Stil-Vorlage</label>
+    <div class="tpl" id="tpls"></div>
+    <label>Eigene Beschreibung (was soll im Raum entstehen?)</label>
+    <textarea id="prompt" placeholder="z.B. Richte den Raum als helles Wohnzimmer mit beigem Sofa, Marmor-Couchtisch und Stehlampe ein ..."></textarea>
+    <label>Letzte Beschreibungen wiederverwenden</label>
+    <select id="history"><option value="">– Verlauf –</option></select>
+    <div class="row">
+      <div>
+        <label>Fußboden</label>
+        <select id="floor">
+          <option value="keep">Wie im Foto belassen</option>
+          <option value="fischgraet">Fischgrät-Parkett Eiche</option>
+          <option value="dielen">Helle Eichendielen</option>
+          <option value="nussbaum">Dunkles Nussbaum-Parkett</option>
+          <option value="stein">Naturstein-Fliesen großformatig</option>
+          <option value="beton">Polierter Beton / Microzement</option>
+        </select>
+      </div>
+      <div>
+        <label>Wandfarbe</label>
+        <select id="wall">
+          <option value="keep">Wie im Foto belassen</option>
+          <option value="weiss">Reinweiß matt</option>
+          <option value="creme">Warmweiß / Creme</option>
+          <option value="hellgrau">Helles Grau</option>
+          <option value="greige">Greige (Grau-Beige)</option>
+          <option value="salbei">Salbeigrün als Akzent</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Zielformat (Zuschnitt erfolgt erst beim Export – die Visualisierung selbst bleibt im Originalformat)</label>
+        <select id="format">
+          <option value="original">Originalformat</option>
+          <option value="1808x1440">1808 × 1440 px (quer)</option>
+          <option value="1080x1920">1080 × 1920 px (hochkant)</option>
+          <option value="1020x1020">1020 × 1020 px (quadratisch)</option>
+        </select>
+      </div>
+      <div>
+        <label>Anzahl Varianten</label>
+        <select id="variants"><option value="1">1 Variante (1 Credit)</option><option value="2">2 Varianten (2 Credits)</option></select>
+      </div>
+    </div>
+    <button class="btn sec" id="back1">← Zurück</button>
+    <button class="btn" id="go">Visualisierung erstellen</button>
+    <div class="status" id="status"></div>
+    <div class="hint">Fest eingebaut: Architektur, Fenster, Ausblick und Personen werden nicht verändert. Jede erstellte Variante kostet 1 Credit (2 €).</div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="card hidden" id="step3">
+    <h2>Schritt 3 · Variante auswählen</h2>
+    <div class="variants" id="varGrid"></div>
+    <button class="btn sec" id="back2">← Neue Visualisierung</button>
+    <button class="btn" id="to4" disabled>Weiter zum Export →</button>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="card hidden" id="step4">
+    <h2>Schritt 4 · Export</h2>
+    <div class="final"><img id="finalImg"></div>
+    <div class="exportrow">
+      <div style="flex:1;min-width:160px">
+        <label>Dateiformat</label>
+        <select id="ext"><option value="png">PNG</option><option value="jpeg">JPEG</option></select>
+      </div>
+      <button class="btn" id="dl" style="margin-top:0">Herunterladen ↓</button>
+    </div>
+    <div class="hint">Das Bild wird exakt im gewählten Zielformat exportiert. Hinweis: KI-Visualisierung – im Exposé als solche kennzeichnen.</div>
+    <button class="btn sec" id="restart">Neues Foto verarbeiten</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let accessCode = "", imgDataUri = null, imgW = 0, imgH = 0;
+  let resultUrls = [], selectedUrl = null;
+
+  const TEMPLATES = {
+    "Luxuriös":      "Richte den Raum luxuriös ein: elegante Designermöbel, beige und cremefarbene Töne, Marmor-Details, Messing-Akzente, skulpturale Stehlampe, hochwertige Wandkunst.",
+    "Modern":        "Richte den Raum modern ein: klare Linien, Nussbaumholz, dunkle Akzente, minimalistische Designermöbel, warme indirekte Beleuchtung.",
+    "Skandinavisch": "Richte den Raum skandinavisch ein: helle Eiche, weiße und salbeigrüne Textilien, gemütliche Wolldecken, natürliche Materialien, warmer Minimalismus.",
+    "Japandi":       "Richte den Raum im Japandi-Stil ein: niedrige Holzmöbel, Leinentextilien, Papierleuchten, ruhige Erdtöne, harmonischer Minimalismus.",
+    "Familie":       "Richte den Raum als einladendes Familienwohnzimmer ein: bequemes großes Sofa, warmer Teppich, freundliche Farben, dezente Dekoration.",
+    "Rohbau sanieren": "Saniere den Raum hochwertig: glatte elegante Wände, sanierte Decke mit warmer indirekter Beleuchtung, Fischgrät-Parkett, und richte ihn anschließend hochwertig ein."
+  };
+  const ROHBAU_TEMPLATE = "Rohbau sanieren";
+
+  // ---------- Login ----------
+  $("loginBtn").addEventListener("click", login);
+  $("code").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+  async function login(){
+    const code = $("code").value.trim();
+    const r = await fetch("/api/login", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({code}) });
+    const d = await r.json();
+    if (!r.ok) { $("loginStatus").innerHTML = '<span class="err">' + (d.error||"Fehler") + '</span>'; return; }
+    accessCode = code;
+    $("loginView").classList.add("hidden");
+    $("appView").classList.remove("hidden");
+    setCredits(d.credits);
+    if (!d.stripe) $("buyBtn").style.display = "none";
+  }
+  function setCredits(n){ $("creditVal").textContent = n; }
+  function hdrs(){ return { "Content-Type":"application/json", "x-access-code": accessCode }; }
+
+  // ---------- Guthaben kaufen ----------
+  $("buyBtn").addEventListener("click", async () => {
+    const n = prompt("Wie viele Visualisierungen möchtest du kaufen? (2 € pro Stück)", "10");
+    if (!n) return;
+    const r = await fetch("/api/checkout", { method:"POST", headers: hdrs(), body: JSON.stringify({ credits: parseInt(n,10) }) });
+    const d = await r.json();
+    if (d.url) location.href = d.url; else alert(d.error || "Fehler beim Start der Zahlung");
+  });
+
+  // ---------- Steps UI ----------
+  function showStep(n){
+    [1,2,3,4].forEach(i => {
+      $("step"+i).classList.toggle("hidden", i !== n);
+      $("s"+i).classList.toggle("active", i === n);
+      $("s"+i).classList.toggle("done", i < n);
+    });
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  // ---------- Step 1: Upload ----------
+  const drop = $("drop"), fileInput = $("file");
+  drop.addEventListener("click", () => fileInput.click());
+  drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("drag"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
+  drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("drag"); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+  fileInput.addEventListener("change", () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
+  function loadFile(file){
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 2000;
+        const s = Math.min(1, MAX / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        imgDataUri = c.toDataURL("image/jpeg", 0.92);
+        imgW = c.width; imgH = c.height;
+        drop.innerHTML = "";
+        const prev = document.createElement("img"); prev.src = imgDataUri; drop.appendChild(prev);
+        const t = document.createElement("span"); t.textContent = "Klicken zum Ändern"; drop.appendChild(t);
+        $("to2").disabled = false;
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  $("to2").addEventListener("click", () => showStep(2));
+  $("back1").addEventListener("click", () => showStep(1));
+
+  // ---------- Step 2: Templates / Prompt / History ----------
+  const tplBox = $("tpls");
+  Object.keys(TEMPLATES).forEach(name => {
+    const b = document.createElement("button");
+    b.textContent = name;
+    b.addEventListener("click", () => {
+      document.querySelectorAll(".tpl button").forEach(x => x.classList.remove("sel"));
+      b.classList.add("sel");
+      $("prompt").value = TEMPLATES[name];
+      if (name === ROHBAU_TEMPLATE) $("mode").value = "rohbau";
+    });
+    tplBox.appendChild(b);
+  });
+  function loadHistory(){
+    let h = [];
+    try { h = JSON.parse(localStorage.getItem("promptHistory") || "[]"); } catch(e){}
+    const sel = $("history");
+    sel.innerHTML = '<option value="">– Verlauf –</option>';
+    h.forEach(p => {
+      const o = document.createElement("option");
+      o.value = p; o.textContent = p.length > 70 ? p.slice(0,70) + "…" : p;
+      sel.appendChild(o);
+    });
+  }
+  loadHistory();
+  $("history").addEventListener("change", () => { if ($("history").value) $("prompt").value = $("history").value; });
+  function saveHistory(p){
+    let h = [];
+    try { h = JSON.parse(localStorage.getItem("promptHistory") || "[]"); } catch(e){}
+    h = [p, ...h.filter(x => x !== p)].slice(0, 15);
+    localStorage.setItem("promptHistory", JSON.stringify(h));
+    loadHistory();
+  }
+
+  // ---------- Generate ----------
+  const statusEl = $("status");
+  $("go").addEventListener("click", async () => {
+    const p = $("prompt").value.trim();
+    if (!p) { alert("Bitte eine Beschreibung eingeben oder Vorlage wählen."); return; }
+    $("go").disabled = true;
+    statusEl.innerHTML = '<span class="work"><span class="spinner"></span>Visualisierung wird erstellt (ca. 30–90 Sek.) …</span>';
+    try {
+      const r = await fetch("/api/stage", { method:"POST", headers: hdrs(), body: JSON.stringify({
+        imageDataUri: imgDataUri, prompt: p, format: $("format").value, variants: parseInt($("variants").value,10), mode: $("mode").value,
+        floor: $("floor").value, wall: $("wall").value
+      })});
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Fehler");
+      saveHistory(p);
+      setCredits(d.credits);
+      resultUrls = d.images; selectedUrl = null;
+      const grid = $("varGrid"); grid.innerHTML = "";
+      resultUrls.forEach((u, i) => {
+        const div = document.createElement("div");
+        div.className = "var";
+        div.innerHTML = '<img src="' + u + '"><p>Variante ' + (i+1) + '</p>';
+        div.addEventListener("click", () => {
+          document.querySelectorAll(".var").forEach(x => x.classList.remove("sel"));
+          div.classList.add("sel"); selectedUrl = u; $("to4").disabled = false;
+        });
+        grid.appendChild(div);
+      });
+      if (resultUrls.length === 1) { grid.firstChild.click(); }
+      statusEl.innerHTML = '<span class="ok">✔ Fertig.</span>';
+      showStep(3);
+    } catch (err) {
+      statusEl.innerHTML = '<span class="err">✖ ' + err.message + '</span>';
+    } finally { $("go").disabled = false; }
+  });
+
+  // ---------- Step 3 -> 4 ----------
+  $("back2").addEventListener("click", () => showStep(2));
+  $("to4").addEventListener("click", () => {
+    $("finalImg").src = selectedUrl;
+    showStep(4);
+  });
+
+  // ---------- Step 4: Export in exakter Pixelgröße ----------
+  $("dl").addEventListener("click", async () => {
+    const fmt = $("format").value, ext = $("ext").value;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      let w, h;
+      if (fmt === "original") { w = img.width; h = img.height; }
+      else { const [a,b] = fmt.split("x").map(Number); w = a; h = b; }
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      // cover-crop: Bild füllt Zielformat vollständig
+      const s = Math.max(w / img.width, h / img.height);
+      const dw = img.width * s, dh = img.height * s;
+      c.getContext("2d").drawImage(img, (w - dw)/2, (h - dh)/2, dw, dh);
+      const a = document.createElement("a");
+      a.href = c.toDataURL("image/" + ext, 0.95);
+      a.download = "staging-" + w + "x" + h + "." + (ext === "jpeg" ? "jpg" : "png");
+      a.click();
+    };
+    img.onerror = () => alert("Export fehlgeschlagen – bitte erneut versuchen.");
+    img.src = "/api/proxy-image?url=" + encodeURIComponent(selectedUrl) + "&_ac=" + encodeURIComponent(accessCode);
+  });
+
+  $("restart").addEventListener("click", () => {
+    imgDataUri = null; resultUrls = []; selectedUrl = null;
+    drop.innerHTML = '<span id="dropText">Foto hierher ziehen oder klicken</span>';
+    $("to2").disabled = true; $("to4").disabled = true;
+    statusEl.innerHTML = "";
+    showStep(1);
+  });
+
+  showStep(1);
+})();
+</script>
+</body>
+</html>
