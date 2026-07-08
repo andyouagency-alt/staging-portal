@@ -1,0 +1,14 @@
+{
+  "name": "staging-portal",
+  "version": "1.0.0",
+  "description": "Virtual Staging Portal fuer Immobilienunternehmen",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "express": "^4.19.0",
+    "stripe": "^16.0.0"
+  }
+}
