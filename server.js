@@ -129,13 +129,30 @@ app.post("/api/checkout", requireCustomer, async (req, res) => {
 const QUEUE = "https://queue.fal.run";
 const IMG_MODEL = "fal-ai/nano-banana-pro/edit";
 
-// Serverseitig fest verdrahteter Schutz – der Kunde kann das nicht umgehen:
-const ARCHITECTURE_LOCK =
-  "ARCHITECTURE LOCK (non-negotiable): reproduce the room's structure exactly 1:1 from the input photo — identical camera position, angle, perspective and lens; every wall, ceiling line, beam, pillar, window (same size, position, frame and the exact view outside), door and opening must stay in exactly the same place with the same proportions. Do not invent, move, resize, add or remove any structural element. " +
-  "CRITICAL: keep any person and any animal in the image exactly as they are — same position, pose, face, clothing and scale. " +
-  "Only add furniture, decor and surface finishes as described. Lighting direction must match the original photo. Ultra realistic, high-end real estate photography. ";
+// Serverseitig fest verdrahteter Schutz – der Kunde kann das nicht umgehen.
+// Gemeinsamer Lock für beide Modi:
+const COMMON_LOCK =
+  "THIS IS A VIRTUAL STAGING TASK ON THE PROVIDED PHOTO — NOT a new image. " +
+  "The output must be the SAME photograph, same room, same shot. " +
+  "NON-NEGOTIABLE LOCKS: identical camera position, camera angle, perspective, lens and framing as the input photo. " +
+  "Every window stays exactly the same (size, position, frame, glazing bars and the EXACT view outside). " +
+  "Every door and every wall opening stays exactly the same (size, position, shape). " +
+  "The room layout, all wall positions, ceiling lines, beams and pillars stay exactly the same. " +
+  "Do not invent, move, resize, add or remove ANY structural element. Do not change the room's proportions. " +
+  "Keep any person and any animal exactly as they are — same position, pose, face, clothing and scale. " +
+  "Lighting direction and daylight must match the original photo. ";
 
-const FORMAT_TO_AR = { original: "auto", "1808x1440": "5:4", "1080x1920": "9:16", "1020x1020": "1:1" };
+// Modus 1: Nur Möblierung – Oberflächen bleiben komplett unangetastet
+const LOCK_MOEBLIEREN = COMMON_LOCK +
+  "ADDITIONALLY LOCKED IN THIS MODE: the floor (material, color, pattern), all wall surfaces and wall colors, " +
+  "the ceiling, all light fixtures and switches stay EXACTLY as in the input photo — zero changes to any surface. " +
+  "The ONLY allowed change: place furniture, rugs, plants and decor items INTO the existing room. Nothing else may differ. ";
+
+// Modus 2: Rohbau -> fertig saniert – Oberflächen dürfen saniert werden, Struktur bleibt
+const LOCK_ROHBAU = COMMON_LOCK +
+  "IN THIS MODE the raw unfinished surfaces may be renovated: finished walls, finished ceiling, new flooring — " +
+  "but strictly WITHIN the locked structure above: windows, doors, openings, layout, proportions and camera stay 1:1. " +
+  "Then furnish the renovated room as described. ";
 
 async function falSubmit(model, input) {
   const r = await fetch(QUEUE + "/" + model, {
@@ -162,17 +179,20 @@ async function falWait(job) {
 
 app.post("/api/stage", requireCustomer, async (req, res) => {
   try {
-    const { imageDataUri, prompt, format, variants } = req.body || {};
+    const { imageDataUri, prompt, format, variants, mode } = req.body || {};
     const n = variants === 2 ? 2 : 1;
     if (!imageDataUri || !imageDataUri.startsWith("data:image/")) return res.status(400).json({ error: "Kein gültiges Bild übermittelt." });
     if (!prompt || !prompt.trim()) return res.status(400).json({ error: "Bitte eine Beschreibung angeben." });
     if (db.credits < n) return res.status(402).json({ error: "Nicht genug Guthaben (" + db.credits + " Credits). Bitte Guthaben aufladen.", credits: db.credits });
 
-    const fullPrompt = ARCHITECTURE_LOCK + "Task: " + prompt.trim();
+    // Wichtig: IMMER im Originalformat generieren ("auto") – ein anderes Seitenverhältnis
+    // würde die KI zwingen, den Raum neu zu erfinden. Zuschnitt passiert erst beim Export.
+    const lock = mode === "rohbau" ? LOCK_ROHBAU : LOCK_MOEBLIEREN;
+    const fullPrompt = lock + "FURNISHING TASK: " + prompt.trim();
     const job = await falSubmit(IMG_MODEL, {
       prompt: fullPrompt,
       image_urls: [imageDataUri],
-      aspect_ratio: FORMAT_TO_AR[format] || "auto",
+      aspect_ratio: "auto",
       output_format: "png",
       num_images: n,
       resolution: "2K"
